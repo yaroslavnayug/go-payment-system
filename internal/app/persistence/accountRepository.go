@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"github.com/jackc/pgx/pgxpool"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/yaroslavnayug/go-payment-system/internal/app/domain/model"
 )
 
