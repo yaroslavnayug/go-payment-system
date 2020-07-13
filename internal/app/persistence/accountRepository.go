@@ -6,7 +6,11 @@ import (
 )
 
 type AccountRepository struct {
-	Postgres *pgxpool.Pool
+	pgConn *pgxpool.Pool
+}
+
+func NewAccountRepository(pgConn *pgxpool.Pool) *AccountRepository {
+	return &AccountRepository{pgConn: pgConn}
 }
 
 func (a *AccountRepository) Persist(account model.Account) error {

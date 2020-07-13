@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	server := api.Server{}
+	server := api.ServerAPI{}
 	http.HandleFunc("/createAccount", server.CreateAccountRequest)
 
 	_ = http.ListenAndServe(":8090", nil)

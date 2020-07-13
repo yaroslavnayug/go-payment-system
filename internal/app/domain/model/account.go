@@ -1,17 +1,17 @@
 package model
 
 type Account struct {
-	uid          uint64
-	firstName    string
-	lastName     string
-	passportData string
-	phone        string
-	address      Address
+	Id           uint64
+	FirstName    string
+	LastName     string
+	PassportData string
+	Phone        string
+	Address      Address
 }
 
 type Address struct {
-	country string
-	state   string
-	city    string
-	street  string
+	Country string
+	State   string
+	City    string
+	Street  string
 }
