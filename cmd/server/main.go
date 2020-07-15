@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +16,7 @@ import (
 
 func main() {
 	logger := MustLogger()
-	postgresConnection := MustPostgres()
+	postgresConnection := MustPostgres(logger)
 	accountRepository := persistence.NewAccountRepository(postgresConnection)
 	API := usecase.NewPaymentSystemAPI(logger, accountRepository)
 
@@ -35,10 +34,6 @@ func main() {
 			logger.Fatalf("ListenAndServe(): %v", err)
 		}
 	}()
-
-	if err := server.Shutdown(context.TODO()); err != nil {
-		panic(err)
-	}
 
 	// WatchOSSignals
 	wg.Add(1)
@@ -73,11 +68,11 @@ func MustLogger() *logrus.Logger {
 	return logger
 }
 
-func MustPostgres() *pgxpool.Pool {
+func MustPostgres(logger *logrus.Logger) *pgxpool.Pool {
 	dsn := os.Getenv("POSTGRESQL_URL")
 	connection, err := pgxpool.Connect(context.Background(), dsn)
 	if err != nil {
-		panic(fmt.Errorf("unable to connect to database: %v", err))
+		logger.Fatalf("unable to connect to database: %v", err)
 	}
 	return connection
 }
