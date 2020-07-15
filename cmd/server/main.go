@@ -15,17 +15,19 @@ import (
 )
 
 func main() {
+	// Build deps
 	logger := MustLogger()
 	postgresConnection := MustPostgres(logger)
 	accountRepository := persistence.NewAccountRepository(postgresConnection)
 	API := usecase.NewPaymentSystemAPI(logger, accountRepository)
 
-	server := &http.Server{Addr: ":8080"}
+	// Assign handlers
 	http.HandleFunc("/createAccount", API.CreateAccountRequest)
 
 	wg := &sync.WaitGroup{}
 
-	// Start Server
+	// Start server
+	server := &http.Server{Addr: ":8080"}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -35,7 +37,7 @@ func main() {
 		}
 	}()
 
-	// WatchOSSignals
+	// Watch OS signals for shutdown
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -53,6 +55,7 @@ func main() {
 		}
 	}()
 
+	// Close connections
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Errorf("app crashed & recovered with: %+v", r)

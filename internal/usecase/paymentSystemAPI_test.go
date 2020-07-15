@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain/model"
 	"github.com/yaroslavnayug/go-payment-system/internal/persistence/mocks"
@@ -18,7 +19,7 @@ func TestCreateAccountRequest_InvalidInputValidation(t *testing.T) {
 	defer ctrl.Finish()
 
 	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
-	server := NewPaymentSystemAPI(accountRepositoryMock)
+	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
 	handler := http.HandlerFunc(server.CreateAccountRequest)
 
 	// act
@@ -50,7 +51,7 @@ func TestCreateAccountRequest_AccountAlreadyExist(t *testing.T) {
 	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
 	accountRepositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(0), model.NewValidationError("account with such passport_data already exist"))
 
-	server := NewPaymentSystemAPI(accountRepositoryMock)
+	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
 	handler := http.HandlerFunc(server.CreateAccountRequest)
 
 	// act
@@ -83,7 +84,7 @@ func TestCreateAccountRequest_Success(t *testing.T) {
 	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
 	accountRepositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(123), nil)
 
-	server := NewPaymentSystemAPI(accountRepositoryMock)
+	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
 	handler := http.HandlerFunc(server.CreateAccountRequest)
 
 	// act

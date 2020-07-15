@@ -86,5 +86,4 @@ func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	return
 }
