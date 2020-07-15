@@ -32,6 +32,7 @@ func main() {
 	go func() {
 		defer wg.Done()
 
+		logger.Info("start server on port 8080")
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Fatalf("ListenAndServe(): %v", err)
 		}
@@ -47,7 +48,6 @@ func main() {
 		<-termChannel
 
 		logger.Info("receive sigterm")
-
 		logger.Info("trying to stop server with grace")
 		err := server.Shutdown(context.Background())
 		if err != nil {
@@ -60,8 +60,12 @@ func main() {
 		if r := recover(); r != nil {
 			logger.Errorf("app crashed & recovered with: %+v", r)
 		}
+
+		logger.Info("close postgres connection")
 		postgresConnection.Close()
 	}()
+
+	wg.Wait()
 }
 
 func MustLogger() *logrus.Logger {
