@@ -1,16 +1,14 @@
-package requests
+package api
 
 import "encoding/json"
 
 type Response struct {
-	StatusCode    int         `json:"status_code"`
 	StatusMessage string      `json:"status_message"`
 	Response      interface{} `json:"response"`
 }
 
-func NewJSONResponse(statusCode int, statusMessage string, customResponse interface{}) ([]byte, error) {
+func NewJSONResponse(statusMessage string, customResponse interface{}) ([]byte, error) {
 	response := &Response{
-		StatusCode:    statusCode,
 		StatusMessage: statusMessage,
 		Response:      customResponse,
 	}

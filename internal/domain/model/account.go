@@ -6,12 +6,8 @@ type Account struct {
 	LastName     string
 	PassportData string
 	Phone        string
-	Address      Address
-}
-
-type Address struct {
-	Country string
-	State   string
-	City    string
-	Street  string
+	Country      string
+	Region       string
+	City         string
+	Street       string
 }
