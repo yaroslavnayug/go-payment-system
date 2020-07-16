@@ -1,4 +1,5 @@
-POSTGRESQL_URL=host='XX.XXX.XX.XXX' port=5432 user='' password='' dbname=''
+POSTGRESQL_URL=host='' port=5432 user='' password='' dbname=''
+LOG_LEVEL=debug
 
 .PHONY: vendor
 vendor:
@@ -16,4 +17,12 @@ u-test:
 
 .PHONY: i-test
 i-test:
-	POSTGRESQL_URL="${POSTGRESQL_URL}" go test -v -cover -count=1 -mod vendor ./internal/persistence/...; \
+	POSTGRESQL_URL="${POSTGRESQL_URL}" go test -v -cover -tags=integration -count=1 -mod vendor ./...; \
+
+.PHONY: e2e-test
+e2e-test:
+	go test -v -cover -tags=e2e -count=1 -mod vendor ./...; \
+
+.PHONY: lint
+lint:
+	golangci-lint run

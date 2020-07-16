@@ -10,14 +10,18 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
+	"github.com/yaroslavnayug/go-payment-system/internal/config"
 	"github.com/yaroslavnayug/go-payment-system/internal/persistence"
 	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
 )
 
 func main() {
 	// Build deps
-	logger := MustLogger()
-	postgresConnection := MustPostgres(logger)
+	cfg := config.GetConfig()
+	logger := MustLogger(cfg)
+	logger.Infof("starting service with config %+v", cfg)
+
+	postgresConnection := MustPostgres(cfg, logger)
 	accountRepository := persistence.NewAccountRepository(postgresConnection)
 	API := usecase.NewPaymentSystemAPI(logger, accountRepository)
 
@@ -68,16 +72,15 @@ func main() {
 	wg.Wait()
 }
 
-func MustLogger() *logrus.Logger {
+func MustLogger(config config.Config) *logrus.Logger {
 	logger := logrus.New()
-	logger.Level = logrus.DebugLevel
+	logger.Level = config.LogConfig.Level
 	logger.Out = os.Stdout
 	return logger
 }
 
-func MustPostgres(logger *logrus.Logger) *pgxpool.Pool {
-	dsn := os.Getenv("POSTGRESQL_URL")
-	connection, err := pgxpool.Connect(context.Background(), dsn)
+func MustPostgres(config config.Config, logger *logrus.Logger) *pgxpool.Pool {
+	connection, err := pgxpool.Connect(context.Background(), config.PostgresConfig.HostString)
 	if err != nil {
 		logger.Fatalf("unable to connect to database: %v", err)
 	}

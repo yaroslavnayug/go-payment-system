@@ -24,6 +24,7 @@ func NewPaymentSystemAPI(logger *logrus.Logger, accountRepository model.AccountR
 func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		s.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -39,12 +40,14 @@ func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.R
 	if validationError != nil {
 		response, err := api.NewJSONResponse(validationError.Error(), nil)
 		if err != nil {
+			s.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		_, err = w.Write(response)
 		if err != nil {
+			s.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -55,18 +58,21 @@ func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.R
 	accountID, err := handler.Handle(command)
 	if err != nil {
 		if _, ok := err.(*model.ValidationError); !ok {
+			s.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		// handle validation error
 		validationErrorResponse, err := api.NewJSONResponse(err.Error(), nil)
 		if err != nil {
+			s.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		_, err = w.Write(validationErrorResponse)
 		if err != nil {
+			s.logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -77,12 +83,14 @@ func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.R
 	customResponse["account_id"] = accountID
 	response, err := api.NewJSONResponse(http.StatusText(http.StatusOK), customResponse)
 	if err != nil {
+		s.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
+		s.logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
