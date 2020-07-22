@@ -9,15 +9,15 @@ import (
 	"github.com/yaroslavnayug/go-payment-system/internal/domain/model"
 )
 
-type AccountRepository struct {
+type PostgresRepository struct {
 	pgConn *pgxpool.Pool
 }
 
-func NewAccountRepository(pgConn *pgxpool.Pool) *AccountRepository {
-	return &AccountRepository{pgConn: pgConn}
+func NewPostgresRepository(pgConn *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{pgConn: pgConn}
 }
 
-func (a *AccountRepository) CreateAccount(account model.Account) (accountID uint64, err error) {
+func (a *PostgresRepository) CreateAccount(account *model.Account) (accountID uint64, err error) {
 	query := `
 		INSERT INTO
 			payment_system.account (firstname, lastname, passportdata, phone, country, region, city, street)
@@ -48,7 +48,7 @@ func (a *AccountRepository) CreateAccount(account model.Account) (accountID uint
 	return accountID, nil
 }
 
-func (a *AccountRepository) GetAccountByPassportData(passportData string) (*model.Account, error) {
+func (a *PostgresRepository) GetAccountByPassportData(passportData string) (*model.Account, error) {
 	query :=
 		`SELECT
 			id,

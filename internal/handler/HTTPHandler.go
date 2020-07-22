@@ -1,4 +1,4 @@
-package usecase
+package handler
 
 import (
 	"encoding/json"
@@ -7,21 +7,20 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/yaroslavnayug/go-payment-system/internal/api"
-	"github.com/yaroslavnayug/go-payment-system/internal/domain/commands"
-	"github.com/yaroslavnayug/go-payment-system/internal/domain/handlers"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain/model"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/service"
 )
 
-type PaymentSystemAPI struct {
-	logger            *logrus.Logger
-	accountRepository model.AccountRepositoryInterface
+type HTTPHandler struct {
+	logger         *logrus.Logger
+	accountService *service.AccountService
 }
 
-func NewPaymentSystemAPI(logger *logrus.Logger, accountRepository model.AccountRepositoryInterface) *PaymentSystemAPI {
-	return &PaymentSystemAPI{logger: logger, accountRepository: accountRepository}
+func NewHTTPHandler(logger *logrus.Logger, accountService *service.AccountService) *HTTPHandler {
+	return &HTTPHandler{logger: logger, accountService: accountService}
 }
 
-func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		s.logger.Error(err)
@@ -36,26 +35,7 @@ func (s *PaymentSystemAPI) CreateAccountRequest(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	command, validationError := commands.NewCreateAccountCommand(request)
-	if validationError != nil {
-		response, err := api.NewJSONResponse(validationError.Error(), nil)
-		if err != nil {
-			s.logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		_, err = w.Write(response)
-		if err != nil {
-			s.logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	handler := handlers.NewCreateAccountHandler(s.accountRepository)
-	accountID, err := handler.Handle(command)
+	accountID, err := s.accountService.CreateAccount(request)
 	if err != nil {
 		if _, ok := err.(*model.ValidationError); !ok {
 			s.logger.Error(err)

@@ -11,8 +11,11 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
 	"github.com/yaroslavnayug/go-payment-system/internal/config"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/converter"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/service"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/validator"
+	"github.com/yaroslavnayug/go-payment-system/internal/handler"
 	"github.com/yaroslavnayug/go-payment-system/internal/persistence"
-	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
 )
 
 func main() {
@@ -22,11 +25,15 @@ func main() {
 	logger.Infof("starting service with config %+v", cfg)
 
 	postgresConnection := MustPostgres(cfg, logger)
-	accountRepository := persistence.NewAccountRepository(postgresConnection)
-	API := usecase.NewPaymentSystemAPI(logger, accountRepository)
+	repository := persistence.NewPostgresRepository(postgresConnection)
+	accountService := service.NewAccountService(
+		validator.NewJSONRequestValidator(),
+		converter.NewJSONRequestConverter(),
+		repository)
+	API := handler.NewHTTPHandler(logger, accountService)
 
 	// Assign handlers
-	http.HandleFunc("/createAccount", API.CreateAccountRequest)
+	http.HandleFunc("/createAccount", API.CreateAccount)
 
 	wg := &sync.WaitGroup{}
 

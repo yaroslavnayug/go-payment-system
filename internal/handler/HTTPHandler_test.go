@@ -1,4 +1,4 @@
-package usecase
+package handler
 
 import (
 	"bytes"
@@ -9,7 +9,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/converter"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain/model"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/service"
+	"github.com/yaroslavnayug/go-payment-system/internal/domain/validator"
 	"github.com/yaroslavnayug/go-payment-system/internal/persistence/mocks"
 )
 
@@ -18,9 +21,13 @@ func TestCreateAccountRequest_InvalidInputValidation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
-	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
-	handler := http.HandlerFunc(server.CreateAccountRequest)
+	accountService := service.NewAccountService(
+		validator.NewJSONRequestValidator(),
+		converter.NewJSONRequestConverter(),
+		mocks.NewMockRepositoryInterface(ctrl),
+	)
+	server := NewHTTPHandler(logrus.New(), accountService)
+	handler := http.HandlerFunc(server.CreateAccount)
 
 	// act
 	var requestBody = []byte(`{
@@ -48,11 +55,17 @@ func TestCreateAccountRequest_AccountAlreadyExist(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
-	accountRepositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(0), model.NewValidationError("account with such passport_data already exist"))
+	repositoryMock := mocks.NewMockRepositoryInterface(ctrl)
+	repositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(0), model.NewValidationError("account with such passport_data already exist"))
 
-	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
-	handler := http.HandlerFunc(server.CreateAccountRequest)
+	accountService := service.NewAccountService(
+		validator.NewJSONRequestValidator(),
+		converter.NewJSONRequestConverter(),
+		repositoryMock,
+	)
+
+	server := NewHTTPHandler(logrus.New(), accountService)
+	handler := http.HandlerFunc(server.CreateAccount)
 
 	// act
 	var requestBody = []byte(`{
@@ -81,11 +94,17 @@ func TestCreateAccountRequest_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	accountRepositoryMock := mocks.NewMockAccountRepositoryInterface(ctrl)
-	accountRepositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(123), nil)
+	repositoryMock := mocks.NewMockRepositoryInterface(ctrl)
+	repositoryMock.EXPECT().CreateAccount(gomock.Any()).Return(uint64(123), nil)
 
-	server := NewPaymentSystemAPI(logrus.New(), accountRepositoryMock)
-	handler := http.HandlerFunc(server.CreateAccountRequest)
+	accountService := service.NewAccountService(
+		validator.NewJSONRequestValidator(),
+		converter.NewJSONRequestConverter(),
+		repositoryMock,
+	)
+
+	server := NewHTTPHandler(logrus.New(), accountService)
+	handler := http.HandlerFunc(server.CreateAccount)
 
 	// act
 	var requestBody = []byte(`{

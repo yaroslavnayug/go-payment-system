@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	Repository         *AccountRepository
+	Repository         *PostgresRepository
 	PostgresConnection *pgxpool.Pool
 )
 
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Errorf("unable to connect to database: %v", err))
 	}
 	PostgresConnection = connection
-	Repository = NewAccountRepository(connection)
+	Repository = NewPostgresRepository(connection)
 
 	code := m.Run()
 	os.Exit(code)
