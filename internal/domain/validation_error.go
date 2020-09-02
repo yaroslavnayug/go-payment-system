@@ -1,7 +1,7 @@
-package model
+package domain
 
 type ValidationError struct {
-	s string
+	errStr string
 }
 
 func NewValidationError(text string) error {
@@ -9,5 +9,5 @@ func NewValidationError(text string) error {
 }
 
 func (e *ValidationError) Error() string {
-	return e.s
+	return e.errStr
 }

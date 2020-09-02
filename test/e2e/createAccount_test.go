@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yaroslavnayug/go-payment-system/internal/api"
-	e2e "github.com/yaroslavnayug/go-payment-system/test/utils"
 )
 
 var host = "http://localhost:8080"

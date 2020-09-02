@@ -1,4 +1,4 @@
-POSTGRESQL_URL=host='' port=5432 user='' password='' dbname=''
+POSTGRESQL_URL=host='10.233.35.117' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
 LOG_LEVEL=debug
 
 .PHONY: vendor
@@ -17,7 +17,7 @@ u-test:
 
 .PHONY: i-test
 i-test:
-	POSTGRESQL_URL="${POSTGRESQL_URL}" go test -v -cover -tags=integration -count=1 -mod vendor ./...; \
+	POSTGRESQL_URL="${POSTGRESQL_URL}" go test -v -cover -tags=integration -count=1 -mod vendor ./internal/postgres/...; \
 
 .PHONY: e2e-test
 e2e-test:

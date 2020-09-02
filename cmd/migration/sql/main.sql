@@ -1,18 +1,25 @@
 CREATE SCHEMA IF NOT EXISTS payment_system;
 
-CREATE SEQUENCE IF NOT EXISTS payment_system.account_id_seq;
+CREATE SEQUENCE IF NOT EXISTS payment_system.customer_uid_seq;
 
-CREATE TABLE IF NOT EXISTS payment_system.account (
-    id integer NOT NULL DEFAULT nextval('payment_system.account_id_seq'),
+CREATE TABLE IF NOT EXISTS payment_system.customer (
+    uid integer NOT NULL DEFAULT nextval('payment_system.customer_uid_seq'),
+    generatedid character varying(64) NOT NULL UNIQUE,
     firstname character varying(64) NOT NULL,
     lastname character varying(64) NOT NULL,
-    passportdata character varying(10) NOT NULL UNIQUE,
+    email character varying(64),
     phone character varying(64) NOT NULL,
-    country character varying(64),
-    region character varying(64),
-    city character varying(64),
-    street character varying(64)
+    country character varying(64) NOT NULL,
+    region character varying(64) NOT NULL,
+    city character varying(64) NOT NULL,
+    street character varying(64) NOT NULL,
+    building character varying(10) NOT NULL,
+    passportnumber character varying(10) NOT NULL UNIQUE,
+	passportissuedate date NOT NULL,
+	passportissuer character varying(255) NOT NULL,
+	birthdate date NOT NULL,
+	birthplace character varying(64) NOT NULL
 );
 
-ALTER SEQUENCE payment_system.account_id_seq
-OWNED BY payment_system.account.id;
+ALTER SEQUENCE payment_system.customer_uid_seq
+OWNED BY payment_system.customer.uid;

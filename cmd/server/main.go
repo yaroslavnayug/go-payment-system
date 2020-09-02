@@ -11,11 +11,9 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
 	"github.com/yaroslavnayug/go-payment-system/internal/config"
-	"github.com/yaroslavnayug/go-payment-system/internal/domain/converter"
-	"github.com/yaroslavnayug/go-payment-system/internal/domain/service"
-	"github.com/yaroslavnayug/go-payment-system/internal/domain/validator"
-	"github.com/yaroslavnayug/go-payment-system/internal/handler"
-	"github.com/yaroslavnayug/go-payment-system/internal/persistence"
+	"github.com/yaroslavnayug/go-payment-system/internal/handler/v1.0"
+	"github.com/yaroslavnayug/go-payment-system/internal/postgres"
+	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
 )
 
 func main() {
@@ -24,16 +22,15 @@ func main() {
 	logger := MustLogger(cfg)
 	logger.Infof("starting service with config %+v", cfg)
 
+	//fasthttp.Server
+
 	postgresConnection := MustPostgres(cfg, logger)
-	repository := persistence.NewPostgresRepository(postgresConnection)
-	accountService := service.NewAccountService(
-		validator.NewJSONRequestValidator(),
-		converter.NewJSONRequestConverter(),
-		repository)
-	API := handler.NewHTTPHandler(logger, accountService)
+	repository := postgres.NewCustomerRepository(postgresConnection)
+	accountService := usecase.NewCustomerUseCase(repository)
+	customerHandler := v1.NewCustomerHandlerV1(logger, accountService)
 
 	// Assign handlers
-	http.HandleFunc("/createAccount", API.CreateAccount)
+	http.HandleFunc("/customer", customerHandler.Create)
 
 	wg := &sync.WaitGroup{}
 
@@ -92,4 +89,8 @@ func MustPostgres(config config.Config, logger *logrus.Logger) *pgxpool.Pool {
 		logger.Fatalf("unable to connect to database: %v", err)
 	}
 	return connection
+}
+
+func middleware(next http.HandlerFunc) http.HandlerFunc {
+	return nil
 }
