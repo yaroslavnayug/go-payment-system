@@ -62,9 +62,9 @@ func (mr *MockCustomerRepositoryMockRecorder) Delete(arg0 interface{}) *gomock.C
 }
 
 // Find mocks base method
-func (m *MockCustomerRepository) Find(arg0 string) (*domain.Customer, error) {
+func (m *MockCustomerRepository) FindByID(arg0 string) (*domain.Customer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Find", arg0)
+	ret := m.ctrl.Call(m, "FindByID", arg0)
 	ret0, _ := ret[0].(*domain.Customer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -73,7 +73,7 @@ func (m *MockCustomerRepository) Find(arg0 string) (*domain.Customer, error) {
 // Find indicates an expected call of Find
 func (mr *MockCustomerRepositoryMockRecorder) Find(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockCustomerRepository)(nil).Find), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockCustomerRepository)(nil).FindByID), arg0)
 }
 
 // Update mocks base method

@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 
-	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 )
@@ -45,19 +44,120 @@ func (a *CustomerRepository) Create(customer *domain.Customer) error {
 		customer.Passport.BirthPlace,
 	)
 
-	if pgErr, ok := err.(interface{ SQLState() string }); ok {
-		if pgErr.SQLState() == pgerrcode.UniqueViolation {
-			return domain.NewValidationError("customer with such generated id or passport number already exist")
-		}
-	}
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *CustomerRepository) Find(customerID string) (customer *domain.Customer, err error) {
-	return nil, nil
+func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Customer, err error) {
+	query := `
+		SELECT
+			uid,
+			generatedid,
+			firstname,
+			lastname,
+			email,
+			phone,
+			country,
+			region,
+			city,
+			street,
+			building,
+			passportnumber,
+			passportissuer,
+			passportissuedate,
+			birthdate,
+			birthplace
+		FROM
+			payment_system.customer
+		WHERE
+			generatedid=$1;`
+
+	customer = &domain.Customer{}
+	queryRow := a.pgConn.QueryRow(
+		context.Background(),
+		query,
+		customerID,
+	)
+	err = queryRow.Scan(
+		&customer.Uid,
+		&customer.GeneratedID,
+		&customer.FirstName,
+		&customer.LastName,
+		&customer.Email,
+		&customer.Phone,
+		&customer.Address.Country,
+		&customer.Address.Region,
+		&customer.Address.City,
+		&customer.Address.Street,
+		&customer.Address.Building,
+		&customer.Passport.Number,
+		&customer.Passport.Issuer,
+		&customer.Passport.IssueDate,
+		&customer.Passport.BirthDate,
+		&customer.Passport.BirthPlace,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return customer, nil
+}
+
+func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (customer *domain.Customer, err error) {
+	query := `
+		SELECT
+			uid,
+			generatedid,
+			firstname,
+			lastname,
+			email,
+			phone,
+			country,
+			region,
+			city,
+			street,
+			building,
+			passportnumber,
+			passportissuer,
+			passportissuedate,
+			birthdate,
+			birthplace
+		FROM
+			payment_system.customer
+		WHERE
+			passportnumber=$1;`
+
+	customer = &domain.Customer{}
+	queryRow := a.pgConn.QueryRow(
+		context.Background(),
+		query,
+		passportNumber,
+	)
+	err = queryRow.Scan(
+		&customer.Uid,
+		&customer.GeneratedID,
+		&customer.FirstName,
+		&customer.LastName,
+		&customer.Email,
+		&customer.Phone,
+		&customer.Address.Country,
+		&customer.Address.Region,
+		&customer.Address.City,
+		&customer.Address.Street,
+		&customer.Address.Building,
+		&customer.Passport.Number,
+		&customer.Passport.Issuer,
+		&customer.Passport.IssueDate,
+		&customer.Passport.BirthDate,
+		&customer.Passport.BirthPlace,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	return customer, nil
 }
 
 func (a *CustomerRepository) Update(customer *domain.Customer) error {

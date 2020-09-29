@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/zapadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/assert"
@@ -55,13 +54,12 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestCreate(t *testing.T) {
+func TestCreate_Find_Delete(t *testing.T) {
 	t.Parallel()
 
 	// arrange
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
-	defer cancel()
-
+	issueDate, _ := time.Parse(domain.DateFormat, "01-01-2000")
+	birthDate, _ := time.Parse(domain.DateFormat, "01-01-2020")
 	customer := &domain.Customer{
 		GeneratedID: "foobar123",
 		FirstName:   "Bruce",
@@ -77,9 +75,9 @@ func TestCreate(t *testing.T) {
 		},
 		Passport: domain.Passport{
 			Number:     "1234567890",
-			IssueDate:  "01-01-2000",
+			IssueDate:  issueDate,
 			Issuer:     "Foo",
-			BirthDate:  "01-01-2000",
+			BirthDate:  birthDate,
 			BirthPlace: "Nsk",
 		},
 	}
@@ -91,136 +89,31 @@ func TestCreate(t *testing.T) {
 	}
 
 	// assert
-	query := `
-		SELECT COUNT(*) FROM
-			payment_system.customer
-	   WHERE
-			generatedid=$1
-		AND
-			firstname=$2
-		AND
-			lastname=$3
-		AND
-			email=$4
-		AND
-			phone=$5
-		AND
-			country=$6
-		AND
-			region=$7
-		AND
-			city=$8
-		AND
-			street=$9
-		AND
-			building=$10
-		AND
-			passportnumber=$11
-		AND
-			passportissuer=$12
-		AND
-			passportissuedate=$13
-		AND
-			birthdate=$14
-		AND
-			birthplace=$15;`
-	var countRows uint64
-	result := PostgresConnection.QueryRow(
-		ctx,
-		query,
-		customer.GeneratedID,
-		customer.FirstName,
-		customer.LastName,
-		customer.Email,
-		customer.Phone,
-		customer.Address.Country,
-		customer.Address.Region,
-		customer.Address.City,
-		customer.Address.Street,
-		customer.Address.Building,
-		customer.Passport.Number,
-		customer.Passport.Issuer,
-		customer.Passport.IssueDate,
-		customer.Passport.BirthDate,
-		customer.Passport.BirthPlace,
-	)
-	err = result.Scan(&countRows)
+	dbCustomer, err := Repository.FindByID(customer.GeneratedID)
 	if err != nil {
 		t.Error(err)
 	}
-
-	assert.Equal(t, uint64(1), countRows)
+	assert.Greater(t, dbCustomer.Uid, uint64(0))
+	assert.Equal(t, customer.GeneratedID, dbCustomer.GeneratedID)
+	assert.Equal(t, customer.FirstName, dbCustomer.FirstName)
+	assert.Equal(t, customer.LastName, dbCustomer.LastName)
+	assert.Equal(t, customer.Email, dbCustomer.Email)
+	assert.Equal(t, customer.Phone, dbCustomer.Phone)
+	assert.Equal(t, customer.Address.Country, dbCustomer.Address.Country)
+	assert.Equal(t, customer.Address.Region, dbCustomer.Address.Region)
+	assert.Equal(t, customer.Address.City, dbCustomer.Address.City)
+	assert.Equal(t, customer.Address.Street, dbCustomer.Address.Street)
+	assert.Equal(t, customer.Address.Building, dbCustomer.Address.Building)
+	assert.Equal(t, customer.Passport.Number, dbCustomer.Passport.Number)
+	assert.Equal(t, customer.Passport.BirthDate, dbCustomer.Passport.BirthDate)
+	assert.Equal(t, customer.Passport.BirthPlace, dbCustomer.Passport.BirthPlace)
+	assert.Equal(t, customer.Passport.IssueDate, dbCustomer.Passport.IssueDate)
+	assert.Equal(t, customer.Passport.Issuer, dbCustomer.Passport.Issuer)
 
 	// clean
-	query = `DELETE FROM payment_system.customer WHERE generatedid = $1;`
+	query := `DELETE FROM payment_system.customer WHERE generatedid = $1;`
 	_, err = PostgresConnection.Exec(context.Background(), query, customer.GeneratedID)
 	if err != nil {
 		t.Error(err)
 	}
-}
-
-func TestCreateAccount_AccountAlreadyExist(t *testing.T) {
-	t.Parallel()
-
-	// arrange
-	customer := &domain.Customer{
-		GeneratedID: "foobar123456",
-		FirstName:   "Bruce",
-		LastName:    "Wayne",
-		Email:       "goo@gmail.com",
-		Phone:       "+7123",
-		Address: domain.Address{
-			Country:  "Russia",
-			Region:   "Msk",
-			City:     "Moscow",
-			Street:   "Marks",
-			Building: "105",
-		},
-		Passport: domain.Passport{
-			Number:     "1234567899",
-			IssueDate:  "01-01-2000",
-			Issuer:     "Foo",
-			BirthDate:  "01-01-2000",
-			BirthPlace: "Nsk",
-		},
-	}
-
-	query := `
-		INSERT INTO
-			payment_system.customer
-			(generatedid, firstname, lastname, phone, country, region, city, street, building, passportnumber, passportissuedate, passportissuer, birthdate, birthplace)
-     VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
-	_, err := PostgresConnection.Exec(
-		context.Background(),
-		query,
-		customer.GeneratedID,
-		customer.FirstName,
-		customer.LastName,
-		customer.Phone,
-		customer.Address.Country,
-		customer.Address.Region,
-		customer.Address.City,
-		customer.Address.Street,
-		customer.Address.Building,
-		customer.Passport.Number,
-		customer.Passport.IssueDate,
-		customer.Passport.Issuer,
-		customer.Passport.BirthDate,
-		customer.Passport.BirthPlace,
-	)
-	if err != nil {
-		t.Error(err)
-	}
-
-	// act
-	err = Repository.Create(customer)
-
-	// assert
-	assert.IsType(t, new(domain.ValidationError), err)
-	assert.Equal(t, "customer with such generated id or passport number already exist", err.Error())
-
-	// clean
-	query = `DELETE FROM payment_system.customer WHERE generatedid = $1;`
-	_, _ = PostgresConnection.Exec(context.Background(), query, customer.GeneratedID)
 }

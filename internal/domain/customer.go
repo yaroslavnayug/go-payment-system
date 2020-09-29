@@ -1,9 +1,12 @@
 package domain
 
+import "time"
+
 //go:generate mockgen -destination=../postgres/mocks/customer_repository_mock.go -package=mocks . CustomerRepository
 type CustomerRepository interface {
 	Create(customer *Customer) error
-	Find(customerID string) (customer *Customer, err error)
+	FindByID(customerID string) (customer *Customer, err error)
+	FindByPassportNumber(passportNumber string) (customer *Customer, err error)
 	Update(customer *Customer) error
 	Delete(customerID string) error
 }
@@ -29,8 +32,8 @@ type Address struct {
 
 type Passport struct {
 	Number     string
-	IssueDate  string
+	IssueDate  time.Time
 	Issuer     string
-	BirthDate  string
+	BirthDate  time.Time
 	BirthPlace string
 }

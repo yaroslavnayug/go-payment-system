@@ -1,4 +1,4 @@
-POSTGRESQL_URL=host='10.233.35.117' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
+POSTGRESQL_URL=host='10.233.21.142' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
 LOG_LEVEL=debug
 
 .PHONY: vendor

@@ -2,25 +2,26 @@ package v1
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"strings"
 
-	"github.com/sirupsen/logrus"
+	"github.com/valyala/fasthttp"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
+	"go.uber.org/zap"
 )
 
+const CustomerIdUrlPath = "id"
+
 type CustomerHandlerV1 struct {
-	logger          *logrus.Logger
+	logger          *zap.Logger
 	customerUseCase *usecase.CustomerUseCase
 }
 
-func NewCustomerHandlerV1(logger *logrus.Logger, customerService *usecase.CustomerUseCase) *CustomerHandlerV1 {
+func NewCustomerHandlerV1(logger *zap.Logger, customerService *usecase.CustomerUseCase) *CustomerHandlerV1 {
 	return &CustomerHandlerV1{logger: logger, customerUseCase: customerService}
 }
 
-type CreateCustomerRequest struct {
+type CustomerRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
@@ -41,107 +42,120 @@ type CreateCustomerRequest struct {
 	} `json:"passport"`
 }
 
-type CreateCustomerResponse struct {
+type CustomerResponse struct {
 	CustomerID string `json:"customer_id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	Address    struct {
+		Country  string `json:"country"`
+		Region   string `json:"region"`
+		City     string `json:"city"`
+		Street   string `json:"street"`
+		Building string `json:"building"`
+	} `json:"address"`
+	Passport struct {
+		Number     string `json:"number"`
+		IssueDate  string `json:"issue_date"`
+		Issuer     string `json:"issuer"`
+		BirthDate  string `json:"birth_date"`
+		BirthPlace string `json:"birth_place"`
+	} `json:"passport"`
 }
 
-func customerFromRequest(request *CreateCustomerRequest) (*domain.Customer, error) {
-	if request.FirstName == "" {
-		return nil, domain.NewValidationError("first_name is mandatory field")
-	}
-	if request.LastName == "" {
-		return nil, domain.NewValidationError("last_name is mandatory field")
-	}
-	if request.Phone == "" {
-		return nil, domain.NewValidationError("phone is mandatory field")
-	}
-	if request.Address.Country == "" {
-		return nil, domain.NewValidationError("address.country is mandatory field")
-	}
-	if request.Address.Region == "" {
-		return nil, domain.NewValidationError("address.region is mandatory field")
-	}
-	if request.Address.City == "" {
-		return nil, domain.NewValidationError("address.city is mandatory field")
-	}
-	if request.Address.Street == "" {
-		return nil, domain.NewValidationError("address.street is mandatory field")
-	}
-	if request.Address.Building == "" {
-		return nil, domain.NewValidationError("address.building is mandatory field")
-	}
-	passportNumber := strings.Replace(request.Passport.Number, " ", "", -1)
-	if len(passportNumber) != 10 {
-		return nil, domain.NewValidationError("passport.number should be 10 characters long")
-	}
-	if request.Passport.BirthDate == "" {
-		return nil, domain.NewValidationError("passport.birth_date is mandatory field")
-	}
-	if request.Passport.BirthPlace == "" {
-		return nil, domain.NewValidationError("passport.birth_place is mandatory field")
-	}
-	if request.Passport.Issuer == "" {
-		return nil, domain.NewValidationError("passport.issuer is mandatory field")
-	}
-	if request.Passport.IssueDate == "" {
-		return nil, domain.NewValidationError("passport.issue_date is mandatory field")
-	}
-
-	customer := &domain.Customer{
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Email:     request.Email,
-		Phone:     request.Phone,
-		Address: domain.Address{
-			Country:  request.Address.Country,
-			Region:   request.Address.Region,
-			City:     request.Address.City,
-			Street:   request.Address.Street,
-			Building: request.Address.Building,
-		},
-		Passport: domain.Passport{
-			Number:     request.Passport.Number,
-			IssueDate:  request.Passport.IssueDate,
-			Issuer:     request.Passport.Issuer,
-			BirthDate:  request.Passport.BirthDate,
-			BirthPlace: request.Passport.BirthPlace,
-		},
-	}
-	return customer, nil
-}
-
-func (s *CustomerHandlerV1) Create(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func (s *CustomerHandlerV1) Create(ctx *fasthttp.RequestCtx) {
+	request := &CustomerRequest{}
+	err := json.Unmarshal(ctx.PostBody(), request)
 	if err != nil {
-		s.logger.Error(err)
-		WriteError(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	request := &CreateCustomerRequest{}
-	err = json.Unmarshal(body, request)
-	if err != nil {
-		WriteError(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		WriteError(ctx, http.StatusText(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
 		return
 	}
 
 	customer, err := customerFromRequest(request)
 	if err != nil {
-		WriteError(w, err.Error(), http.StatusBadRequest)
+		WriteError(ctx, err.Error(), fasthttp.StatusBadRequest)
 		return
 	}
 
-	customerID, err := s.customerUseCase.Create(customer)
+	err = s.customerUseCase.Create(customer)
 	if err != nil {
 		if _, isValidationError := err.(*domain.ValidationError); isValidationError {
-			WriteError(w, err.Error(), http.StatusBadRequest)
+			WriteError(ctx, err.Error(), fasthttp.StatusConflict)
 			return
 		} else {
 			s.logger.Error(err)
-			WriteError(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			WriteError(ctx, http.StatusText(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
 			return
 		}
 	}
+	WriteSuccessPOST(ctx, responseFromCustomer(customer))
+}
 
-	WriteSuccess(w, CreateCustomerResponse{CustomerID: customerID})
+func (s *CustomerHandlerV1) Find(ctx *fasthttp.RequestCtx) {
+	customerID := ctx.UserValue(CustomerIdUrlPath)
+	if _, ok := customerID.(string); !ok {
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusNotFound), fasthttp.StatusNotFound)
+		return
+	}
+	customer, err := s.customerUseCase.Find(customerID.(string))
+	if err != nil {
+		s.logger.Error(err)
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+		return
+	}
+	if customer == nil {
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusNotFound), fasthttp.StatusNotFound)
+		return
+	}
+	WriteSuccessGET(ctx, responseFromCustomer(customer))
+}
+
+func (s *CustomerHandlerV1) Update(ctx *fasthttp.RequestCtx) {
+	customerID := ctx.UserValue(CustomerIdUrlPath)
+	if _, ok := customerID.(string); !ok {
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusNotFound), fasthttp.StatusNotFound)
+		return
+	}
+
+	request := &CustomerRequest{}
+	err := json.Unmarshal(ctx.PostBody(), request)
+	if err != nil {
+		WriteError(ctx, http.StatusText(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
+		return
+	}
+
+	customer, err := customerFromRequest(request)
+	if err != nil {
+		WriteError(ctx, err.Error(), fasthttp.StatusBadRequest)
+		return
+	}
+
+	err = s.customerUseCase.Update(customer, customerID.(string))
+	if err != nil {
+		if _, isValidationError := err.(*domain.ValidationError); isValidationError {
+			WriteError(ctx, err.Error(), fasthttp.StatusConflict)
+			return
+		} else {
+			s.logger.Error(err)
+			WriteError(ctx, http.StatusText(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+			return
+		}
+	}
+	WriteSuccessPUT(ctx)
+}
+
+func (s *CustomerHandlerV1) Delete(ctx *fasthttp.RequestCtx) {
+	customerID := ctx.UserValue(CustomerIdUrlPath)
+	if _, ok := customerID.(string); !ok {
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusNotFound), fasthttp.StatusNotFound)
+		return
+	}
+	err := s.customerUseCase.Delete(customerID.(string))
+	if err != nil {
+		s.logger.Error(err)
+		WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+		return
+	}
+	WriteSuccessDELETE(ctx)
 }
