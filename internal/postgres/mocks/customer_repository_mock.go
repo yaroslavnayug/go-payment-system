@@ -61,7 +61,7 @@ func (mr *MockCustomerRepositoryMockRecorder) Delete(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCustomerRepository)(nil).Delete), arg0)
 }
 
-// Find mocks base method
+// FindByID mocks base method
 func (m *MockCustomerRepository) FindByID(arg0 string) (*domain.Customer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByID", arg0)
@@ -70,10 +70,25 @@ func (m *MockCustomerRepository) FindByID(arg0 string) (*domain.Customer, error)
 	return ret0, ret1
 }
 
-// Find indicates an expected call of Find
-func (mr *MockCustomerRepositoryMockRecorder) Find(arg0 interface{}) *gomock.Call {
+// FindByID indicates an expected call of FindByID
+func (mr *MockCustomerRepositoryMockRecorder) FindByID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockCustomerRepository)(nil).FindByID), arg0)
+}
+
+// FindByPassportNumber mocks base method
+func (m *MockCustomerRepository) FindByPassportNumber(arg0 string) (*domain.Customer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByPassportNumber", arg0)
+	ret0, _ := ret[0].(*domain.Customer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByPassportNumber indicates an expected call of FindByPassportNumber
+func (mr *MockCustomerRepositoryMockRecorder) FindByPassportNumber(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPassportNumber", reflect.TypeOf((*MockCustomerRepository)(nil).FindByPassportNumber), arg0)
 }
 
 // Update mocks base method

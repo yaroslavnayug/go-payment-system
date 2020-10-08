@@ -1,6 +1,5 @@
 package main
 
-import "C"
 import (
 	"context"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/valyala/fasthttp"
 	"github.com/yaroslavnayug/go-payment-system/internal/config"
+	"github.com/yaroslavnayug/go-payment-system/internal/handler/v1.0"
 	"github.com/yaroslavnayug/go-payment-system/internal/postgres"
 	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
 	"go.uber.org/zap"
@@ -20,8 +20,11 @@ import (
 
 func main() {
 	// Build deps
-	cfg := config.GetConfig()
-	logger := MustLogger(cfg)
+	cfg := config.Read()
+	logger := MustLogger()
+	defer func() {
+		_ = logger.Sync()
+	}()
 	logger.Info(fmt.Sprintf("starting service with config %+v", cfg))
 
 	postgresConnection := MustPostgres(cfg, logger)
@@ -35,8 +38,12 @@ func main() {
 	}()
 
 	repository := postgres.NewCustomerRepository(postgresConnection)
-	accountService := usecase.NewCustomerUseCase(repository)
-	customerHandler := v1.NewCustomerHandlerV1(logger, accountService)
+	customerUseCase := usecase.NewCustomerUseCase(repository)
+	customerHandler := v1.NewCustomerHandlerV1(
+		logger.With(zap.String("handler", "customerV1")),
+		customerUseCase,
+		v1.NewJSONResponseWriter(logger),
+	)
 
 	// Assign handlers
 	router := fasthttprouter.New()
@@ -56,7 +63,7 @@ func main() {
 
 		logger.Info("start server on port 8080")
 		if err := server.ListenAndServe(":8080"); err != nil {
-			logger.Fatal("fail to start server: %v", zap.String("error", err.Error()))
+			logger.Fatal(fmt.Sprintf("fail to start server: %s", err.Error()))
 		}
 	}()
 
@@ -73,29 +80,26 @@ func main() {
 		logger.Info("trying to stop server with grace")
 		err := server.Shutdown()
 		if err != nil {
-			logger.Fatal("unable to stop http server: %s", zap.String("error", err.Error()))
+			logger.Error(fmt.Sprintf("unable to stop http server: %s", err.Error()))
 		}
+		logger.Info("server stopped")
 	}()
 
 	wg.Wait()
 }
 
-func MustLogger(config config.Config) *zap.Logger {
+func MustLogger() *zap.Logger {
 	logger, err := zap.NewProduction()
 	if err != nil {
-		panic(fmt.Sprintf("unable to create logger: %+v", err))
+		panic(fmt.Sprintf("unable to create logger: %s", err.Error()))
 	}
-	defer func() {
-		_ = logger.Sync()
-	}()
-
 	return logger
 }
 
 func MustPostgres(config config.Config, logger *zap.Logger) *pgxpool.Pool {
 	connection, err := pgxpool.Connect(context.Background(), config.PostgresConfig.HostString)
 	if err != nil {
-		logger.Fatal("unable to connect to database", zap.String("error", err.Error()))
+		logger.Fatal(fmt.Sprintf("unable to connect to database: %s", err.Error()))
 	}
 	return connection
 }

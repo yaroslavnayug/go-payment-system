@@ -1,4 +1,4 @@
-POSTGRESQL_URL=host='10.233.21.142' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
+POSTGRESQL_URL=host='10.233.33.234' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
 LOG_LEVEL=debug
 
 .PHONY: vendor
@@ -26,3 +26,7 @@ e2e-test:
 .PHONY: lint
 lint:
 	golangci-lint run
+
+.PHONE: swagger
+swagger:
+	swagger generate spec -o ./docs/swagger.json

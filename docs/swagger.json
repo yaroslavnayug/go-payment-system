@@ -1,0 +1,329 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "Payment System API.",
+    "version": "1.0.0"
+  },
+  "host": "localhost:8080",
+  "paths": {
+    "/customer": {
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Creates a new customer.",
+        "operationId": "CreateCustomer",
+        "parameters": [
+          {
+            "x-go-name": "CustomerID",
+            "name": "customer_id",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "FirstName",
+            "name": "first_name",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "LastName",
+            "name": "last_name",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Email",
+            "name": "email",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Phone",
+            "name": "phone",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Address",
+            "name": "address",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "building": {
+                  "type": "string",
+                  "x-go-name": "Building"
+                },
+                "city": {
+                  "type": "string",
+                  "x-go-name": "City"
+                },
+                "country": {
+                  "type": "string",
+                  "x-go-name": "Country"
+                },
+                "region": {
+                  "type": "string",
+                  "x-go-name": "Region"
+                },
+                "street": {
+                  "type": "string",
+                  "x-go-name": "Street"
+                }
+              }
+            }
+          },
+          {
+            "x-go-name": "Passport",
+            "name": "passport",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "birth_date": {
+                  "type": "string",
+                  "x-go-name": "BirthDate"
+                },
+                "birth_place": {
+                  "type": "string",
+                  "x-go-name": "BirthPlace"
+                },
+                "issue_date": {
+                  "type": "string",
+                  "x-go-name": "IssueDate"
+                },
+                "issuer": {
+                  "type": "string",
+                  "x-go-name": "Issuer"
+                },
+                "number": {
+                  "type": "string",
+                  "x-go-name": "Number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {},
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/customer/{id}": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Finds existing customer by ID.",
+        "operationId": "FindCustomer",
+        "responses": {
+          "200": {},
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Updates existing customer.",
+        "operationId": "UpdateCustomer",
+        "parameters": [
+          {
+            "x-go-name": "CustomerID",
+            "name": "customer_id",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "FirstName",
+            "name": "first_name",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "LastName",
+            "name": "last_name",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Email",
+            "name": "email",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Phone",
+            "name": "phone",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "x-go-name": "Address",
+            "name": "address",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "building": {
+                  "type": "string",
+                  "x-go-name": "Building"
+                },
+                "city": {
+                  "type": "string",
+                  "x-go-name": "City"
+                },
+                "country": {
+                  "type": "string",
+                  "x-go-name": "Country"
+                },
+                "region": {
+                  "type": "string",
+                  "x-go-name": "Region"
+                },
+                "street": {
+                  "type": "string",
+                  "x-go-name": "Street"
+                }
+              }
+            }
+          },
+          {
+            "x-go-name": "Passport",
+            "name": "passport",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "birth_date": {
+                  "type": "string",
+                  "x-go-name": "BirthDate"
+                },
+                "birth_place": {
+                  "type": "string",
+                  "x-go-name": "BirthPlace"
+                },
+                "issue_date": {
+                  "type": "string",
+                  "x-go-name": "IssueDate"
+                },
+                "issuer": {
+                  "type": "string",
+                  "x-go-name": "Issuer"
+                },
+                "number": {
+                  "type": "string",
+                  "x-go-name": "Number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {},
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Deletes existing customer.",
+        "operationId": "DeleteCustomer",
+        "responses": {
+          "200": {},
+          "204": {},
+          "400": {
+            "$ref": "#/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/responses/ErrorResponse"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Status"
+        }
+      },
+      "x-go-package": "github.com/yaroslavnayug/go-payment-system/internal/handler/v1.0"
+    }
+  },
+  "responses": {
+    "ErrorResponse": {
+      "schema": {
+        "$ref": "#/definitions/Error"
+      },
+      "headers": {
+        "error": {}
+      }
+    }
+  }
+}

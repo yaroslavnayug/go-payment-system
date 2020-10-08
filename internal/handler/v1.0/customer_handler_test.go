@@ -9,13 +9,12 @@ import (
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/golang/mock/gomock"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
+	"go.uber.org/zap"
 
-	//"github.com/yaroslavnayug/go-payment-system/internal/domain"
 	"github.com/yaroslavnayug/go-payment-system/internal/postgres/mocks"
 	"github.com/yaroslavnayug/go-payment-system/internal/usecase"
 )
@@ -30,7 +29,9 @@ func TestCreate_Success(t *testing.T) {
 	repositoryMock := mocks.NewMockCustomerRepository(ctrl)
 	repositoryMock.EXPECT().Create(gomock.Any()).Return(nil)
 	useCase := usecase.NewCustomerUseCase(repositoryMock)
-	handlerV1 := NewCustomerHandlerV1(logrus.New(), useCase)
+	logger, _ := zap.NewDevelopment()
+	writer := NewJSONResponseWriter(logger)
+	handlerV1 := NewCustomerHandlerV1(logger, useCase, writer)
 
 	// arrange fake server
 	router := fasthttprouter.New()
@@ -139,7 +140,9 @@ func TestCreate_ValidationError(t *testing.T) {
 			repositoryMock := mocks.NewMockCustomerRepository(ctrl)
 			repositoryMock.EXPECT().Create(gomock.Any()).AnyTimes().Return(test.repositoryReturn)
 			useCase := usecase.NewCustomerUseCase(repositoryMock)
-			handlerV1 := NewCustomerHandlerV1(logrus.New(), useCase)
+			logger, _ := zap.NewDevelopment()
+			writer := NewJSONResponseWriter(logger)
+			handlerV1 := NewCustomerHandlerV1(logger, useCase, writer)
 
 			// arrange fake server
 			router := fasthttprouter.New()
@@ -199,10 +202,12 @@ func TestFind_CustomerFound(t *testing.T) {
 	}
 
 	repositoryMock := mocks.NewMockCustomerRepository(ctrl)
-	repositoryMock.EXPECT().Find(gomock.Any()).Return(&customer, nil)
+	repositoryMock.EXPECT().FindByID(gomock.Any()).Return(&customer, nil)
 
 	useCase := usecase.NewCustomerUseCase(repositoryMock)
-	handlerV1 := NewCustomerHandlerV1(logrus.New(), useCase)
+	logger, _ := zap.NewDevelopment()
+	writer := NewJSONResponseWriter(logger)
+	handlerV1 := NewCustomerHandlerV1(logger, useCase, writer)
 
 	// arrange fake server
 	router := fasthttprouter.New()
@@ -266,10 +271,12 @@ func TestFind_CustomerNotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	repositoryMock := mocks.NewMockCustomerRepository(ctrl)
-	repositoryMock.EXPECT().Find(gomock.Any()).Return(nil, nil)
+	repositoryMock.EXPECT().FindByID(gomock.Any()).Return(nil, nil)
 
 	useCase := usecase.NewCustomerUseCase(repositoryMock)
-	handlerV1 := NewCustomerHandlerV1(logrus.New(), useCase)
+	logger, _ := zap.NewDevelopment()
+	writer := NewJSONResponseWriter(logger)
+	handlerV1 := NewCustomerHandlerV1(logger, useCase, writer)
 
 	// arrange fake server
 	router := fasthttprouter.New()

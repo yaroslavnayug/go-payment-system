@@ -7,7 +7,7 @@ import (
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 )
 
-func customerFromRequest(request *CustomerRequest) (*domain.Customer, error) {
+func customerFromRequest(request *CustomerBody) (*domain.Customer, error) {
 	if request.FirstName == "" {
 		return nil, domain.NewValidationError("first_name is mandatory field")
 	}
@@ -80,10 +80,10 @@ func customerFromRequest(request *CustomerRequest) (*domain.Customer, error) {
 	return customer, nil
 }
 
-func responseFromCustomer(customer *domain.Customer) *CustomerResponse {
+func responseFromCustomer(customer *domain.Customer) *CustomerBody {
 	issueDate := customer.Passport.IssueDate.Format(domain.DateFormat)
 	birthDate := customer.Passport.BirthDate.Format(domain.DateFormat)
-	return &CustomerResponse{
+	return &CustomerBody{
 		CustomerID: customer.GeneratedID,
 		FirstName:  customer.FirstName,
 		LastName:   customer.LastName,

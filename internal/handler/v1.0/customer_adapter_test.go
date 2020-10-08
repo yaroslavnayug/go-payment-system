@@ -10,24 +10,24 @@ import (
 func TestCustomerFromRequest_ValidationError(t *testing.T) {
 	testCases := []struct {
 		name   string
-		input  *CustomerRequest
+		input  *CustomerBody
 		result string
 	}{
 		{
 			"EmptyFirstName",
-			&CustomerRequest{},
+			&CustomerBody{},
 			"first_name is mandatory field",
 		},
 
 		{
 			"EmptyLastName",
-			&CustomerRequest{FirstName: "Bruce"},
+			&CustomerBody{FirstName: "Bruce"},
 			"last_name is mandatory field",
 		},
 
 		{
 			"EmptyPhone",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 			},
@@ -36,7 +36,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyAddress",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -46,7 +46,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyRegion",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -63,7 +63,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyCity",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -80,7 +80,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyStreet",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -97,7 +97,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyBuilding",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -114,7 +114,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyPassportNumber",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -138,7 +138,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyPassportBirthDate",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -161,7 +161,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 		},
 		{
 			"InvalidBirthDate",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -185,7 +185,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyPassportBirthPlace",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -209,7 +209,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyPassportIssuer",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -233,7 +233,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 
 		{
 			"EmptyPassportIssueDate",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -256,7 +256,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 		},
 		{
 			"InvalidIssueDate",
-			&CustomerRequest{
+			&CustomerBody{
 				FirstName: "Bruce",
 				LastName:  "Wayne",
 				Phone:     "+1234566",
@@ -288,7 +288,7 @@ func TestCustomerFromRequest_ValidationError(t *testing.T) {
 }
 
 func TestCustomerFromRequest_AllMandatoryFields(t *testing.T) {
-	request := &CustomerRequest{
+	request := &CustomerBody{
 		FirstName: "Bruce",
 		LastName:  "Wayne",
 		Email:     "goo@gmail.com",
