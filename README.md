@@ -1,10 +1,21 @@
 # go-payment-system
 
-/ починить e2e и проверить, что fasthttp работает на Create и Find
+Пример REST API сервиса на принципах Clean Architecture
 
-/ а не поменять ли валидацию на github.com/go-ozzo/ozzo-validation?
+## [API Documentation](https://github.com/yaroslavnayug/go-payment-system/tree/master/docs)
 
-/ APIServer (config, router, logger)
-// configureRouter
+## TODO:
+- Дописать e2e для /customer
+- Добавить метод для создания счета
+- Добавить методы для списания/пополнения счета
+- Добавить обертку для работы с транзациями БД
 
-/ переделать миграцию на golang-migrate
+## Схема работы
+```flow
+st1=>start: HTTPHandler
+op1=>operation: Adapter (JSON to DTO)
+op2=>operation: Usecase (Implements domain logic)
+op3=>operation: Repository (Work with database)
+st1->op1->op2->op3
+
+e=>end
