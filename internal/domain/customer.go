@@ -3,6 +3,7 @@ package domain
 import "time"
 
 //go:generate mockgen -destination=../postgres/mocks/customer_repository_mock.go -package=mocks . CustomerRepository
+
 type CustomerRepository interface {
 	Create(customer *Customer) error
 	FindByID(customerID string) (customer *Customer, err error)

@@ -27,6 +27,7 @@ func TestCreate_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	repositoryMock := mocks.NewMockCustomerRepository(ctrl)
+	repositoryMock.EXPECT().FindByPassportNumber(gomock.Any()).Return(nil, nil)
 	repositoryMock.EXPECT().Create(gomock.Any()).Return(nil)
 	useCase := usecase.NewCustomerUseCase(repositoryMock)
 	logger, _ := zap.NewDevelopment()
@@ -42,7 +43,9 @@ func TestCreate_Success(t *testing.T) {
 	s := &fasthttp.Server{
 		Handler: router.Handler,
 	}
-	go s.Serve(ln)
+	go func() {
+		_ = s.Serve(ln)
+	}()
 
 	client := fasthttp.Client{
 		Dial: func(addr string) (net.Conn, error) {
@@ -81,7 +84,7 @@ func TestCreate_Success(t *testing.T) {
 	request.SetRequestURI("/customer")
 	request.SetHost("localhost")
 
-	client.Do(request, response)
+	_ = client.Do(request, response)
 
 	// assert
 	assert.Equal(t, fasthttp.StatusCreated, response.Header.StatusCode())
@@ -127,7 +130,7 @@ func TestCreate_ValidationError(t *testing.T) {
 	}`),
 			domain.NewValidationError("customer with such generated id or passport number already exist"),
 			fasthttp.StatusConflict,
-			`{"error":{"status":409,"message":"customer with such generated id or passport number already exist"}}`,
+			`{"error":{"status":409,"message":"customer with such passport number already exist"}}`,
 		},
 	}
 
@@ -138,7 +141,7 @@ func TestCreate_ValidationError(t *testing.T) {
 			defer ctrl.Finish()
 
 			repositoryMock := mocks.NewMockCustomerRepository(ctrl)
-			repositoryMock.EXPECT().Create(gomock.Any()).AnyTimes().Return(test.repositoryReturn)
+			repositoryMock.EXPECT().FindByPassportNumber(gomock.Any()).AnyTimes().Return(&domain.Customer{}, nil)
 			useCase := usecase.NewCustomerUseCase(repositoryMock)
 			logger, _ := zap.NewDevelopment()
 			writer := NewJSONResponseWriter(logger)
@@ -153,7 +156,9 @@ func TestCreate_ValidationError(t *testing.T) {
 			s := &fasthttp.Server{
 				Handler: router.Handler,
 			}
-			go s.Serve(ln)
+			go func() {
+				_ = s.Serve(ln)
+			}()
 
 			client := fasthttp.Client{
 				Dial: func(addr string) (net.Conn, error) {
@@ -172,7 +177,7 @@ func TestCreate_ValidationError(t *testing.T) {
 			request.SetRequestURI("/customer")
 			request.SetHost("localhost")
 
-			client.Do(request, response)
+			_ = client.Do(request, response)
 
 			// assert
 			assert.Equal(t, test.expectedStatus, response.Header.StatusCode())
@@ -218,7 +223,9 @@ func TestFind_CustomerFound(t *testing.T) {
 	server := &fasthttp.Server{
 		Handler: router.Handler,
 	}
-	go server.Serve(listener)
+	go func() {
+		_ = server.Serve(listener)
+	}()
 
 	client := fasthttp.Client{
 		Dial: func(addr string) (net.Conn, error) {
@@ -236,10 +243,10 @@ func TestFind_CustomerFound(t *testing.T) {
 	request.Header.SetMethod(fasthttp.MethodGet)
 	request.SetHost("localhost")
 
-	client.Do(request, response)
+	_ = client.Do(request, response)
 
 	// assert
-	assert.Equal(t, http.StatusFound, response.Header.StatusCode())
+	assert.Equal(t, http.StatusOK, response.Header.StatusCode())
 
 	expectedBody := `{
 	"customer_id":"foobar",
@@ -287,7 +294,9 @@ func TestFind_CustomerNotFound(t *testing.T) {
 	server := &fasthttp.Server{
 		Handler: router.Handler,
 	}
-	go server.Serve(listener)
+	go func() {
+		_ = server.Serve(listener)
+	}()
 
 	client := fasthttp.Client{
 		Dial: func(addr string) (net.Conn, error) {
@@ -305,7 +314,7 @@ func TestFind_CustomerNotFound(t *testing.T) {
 	request.Header.SetMethod(fasthttp.MethodGet)
 	request.SetHost("localhost")
 
-	client.Do(request, response)
+	_ = client.Do(request, response)
 
 	// assert
 	assert.Equal(t, http.StatusNotFound, response.Header.StatusCode())

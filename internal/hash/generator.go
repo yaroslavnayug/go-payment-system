@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	hashCustomerKey    = "customer"
-	hashTransactionKey = "transaction"
+	hashCustomerKey = "customer"
 )
 
 func GenerateUniqueCustomerID(firstName string, passportNumber string, timestamp int64) (string, error) {

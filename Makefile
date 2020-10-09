@@ -1,3 +1,4 @@
+OUTPUT?=bin/payment-system
 POSTGRESQL_URL=host='10.233.33.234' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
 LOG_LEVEL=debug
 
@@ -13,15 +14,20 @@ migration:
 
 .PHONY: u-test
 u-test:
-	go test -v -cover -count=1 -mod vendor ./internal/...; \
+	GO111MODULE=on go test -v -mod=vendor -cover ./... -coverprofile cover.out;
 
 .PHONY: i-test
 i-test:
-	POSTGRESQL_URL="${POSTGRESQL_URL}" go test -v -cover -tags=integration -count=1 -mod vendor ./internal/postgres/...; \
+	GO111MODULE=on POSTGRESQL_URL="${POSTGRESQL_URL}" go test ./internal/postgres -tags=integration -v -mod=vendor -cover -coverprofile cover.out;
 
 .PHONY: e2e-test
 e2e-test:
-	go test -v -cover -tags=e2e -count=1 -mod vendor ./...; \
+	GO111MODULE=on go test -tags=e2e -v -mod=vendor -count=1  ./test/e2e; \
+
+.PHONY: coverage
+coverage:
+	@echo "+ $@"
+	GO111MODULE=on go tool cover -func cover.out | grep total | awk '{print $3}'
 
 .PHONY: lint
 lint:
@@ -30,3 +36,9 @@ lint:
 .PHONE: swagger
 swagger:
 	swagger generate spec -o ./docs/swagger.json
+
+.PHONE: build
+build:
+	GO111MODULE=${GO111MODULE} go build \
+    		-mod vendor \
+    		-o ${OUTPUT} cmd/server/main.go

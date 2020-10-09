@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const ContentTypeJSON = "application/json"
+
 // swagger:response ErrorResponse
 type ErrorResponse struct {
 	Error Error `json:"error"`
@@ -34,6 +36,7 @@ func (w *JSONResponseWriter) WriteSuccessPOST(ctx *fasthttp.RequestCtx, response
 		return
 	}
 
+	ctx.Response.Header.SetContentType(ContentTypeJSON)
 	ctx.Response.SetStatusCode(fasthttp.StatusCreated)
 	ctx.Response.SetBody(response)
 }
@@ -46,6 +49,7 @@ func (w *JSONResponseWriter) WriteSuccessGET(ctx *fasthttp.RequestCtx, responseB
 		return
 	}
 
+	ctx.Response.Header.SetContentType(ContentTypeJSON)
 	ctx.Response.SetStatusCode(fasthttp.StatusOK)
 	ctx.Response.SetBody(response)
 }
@@ -72,6 +76,7 @@ func (w *JSONResponseWriter) WriteError(ctx *fasthttp.RequestCtx, message string
 		return
 	}
 
+	ctx.Response.Header.SetContentType(ContentTypeJSON)
 	ctx.Response.SetStatusCode(code)
 	ctx.Response.SetBody(response)
 }

@@ -50,11 +50,11 @@ func (c *CustomerUseCase) Find(customerID string) (*domain.Customer, error) {
 }
 
 func (c *CustomerUseCase) Update(customer *domain.Customer, customerID string) error {
-	customer, err := c.repo.FindByID(customerID)
+	existingCustomer, err := c.repo.FindByID(customerID)
 	if err != nil {
 		return err
 	}
-	if customer == nil {
+	if existingCustomer == nil {
 		return domain.NewValidationError("customer with such id not found")
 	}
 	err = c.repo.Update(customer)

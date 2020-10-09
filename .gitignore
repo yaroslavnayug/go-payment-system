@@ -1,0 +1,7 @@
+# Binarys
+bin/*
+!bin/.gitkeep
+
+
+# Test coverage
+*.out

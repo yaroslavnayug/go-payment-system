@@ -20,7 +20,11 @@ type CustomerHandlerV1 struct {
 	responseWriter handler.ResponseWriterInterface
 }
 
-func NewCustomerHandlerV1(logger *zap.Logger, customerService *usecase.CustomerUseCase, responseWriter handler.ResponseWriterInterface) *CustomerHandlerV1 {
+func NewCustomerHandlerV1(
+	logger *zap.Logger,
+	customerService *usecase.CustomerUseCase,
+	responseWriter handler.ResponseWriterInterface,
+) *CustomerHandlerV1 {
 	return &CustomerHandlerV1{logger: logger, useCase: customerService, responseWriter: responseWriter}
 }
 
@@ -77,12 +81,16 @@ func (h *CustomerHandlerV1) Create(ctx *fasthttp.RequestCtx) {
 
 	err = h.useCase.Create(customer)
 	if err != nil {
-		if _, isValidationError := err.(*domain.ValidationError); isValidationError {
+		if err, isValidationError := err.(*domain.ValidationError); isValidationError {
 			h.responseWriter.WriteError(ctx, err.Error(), fasthttp.StatusConflict)
 			return
 		} else {
-			h.logger.Error(fmt.Sprintf("error while create customer. request: %h, error: %h", ctx.PostBody(), err.Error()))
-			h.responseWriter.WriteError(ctx, http.StatusText(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+			h.logger.Error(fmt.Sprintf("error while create customer. request: %s, error: %s", ctx.PostBody(), err.Error()))
+			h.responseWriter.WriteError(
+				ctx,
+				http.StatusText(fasthttp.StatusInternalServerError),
+				fasthttp.StatusInternalServerError,
+			)
 			return
 		}
 	}
@@ -104,8 +112,12 @@ func (h *CustomerHandlerV1) Find(ctx *fasthttp.RequestCtx) {
 	}
 	customer, err := h.useCase.Find(customerID.(string))
 	if err != nil {
-		h.logger.Error(fmt.Sprintf("error while find customer. customerID: %h, error: %h", customerID, err.Error()))
-		h.responseWriter.WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+		h.logger.Error(fmt.Sprintf("error while find customer. customerID: %s, error: %s", customerID, err.Error()))
+		h.responseWriter.WriteError(
+			ctx,
+			fasthttp.StatusMessage(fasthttp.StatusInternalServerError),
+			fasthttp.StatusInternalServerError,
+		)
 		return
 	}
 	if customer == nil {
@@ -144,12 +156,18 @@ func (h *CustomerHandlerV1) Update(ctx *fasthttp.RequestCtx) {
 
 	err = h.useCase.Update(customer, customerID.(string))
 	if err != nil {
-		if _, isValidationError := err.(*domain.ValidationError); isValidationError {
+		if err, isValidationError := err.(*domain.ValidationError); isValidationError {
 			h.responseWriter.WriteError(ctx, err.Error(), fasthttp.StatusNotFound)
 			return
 		} else {
-			h.logger.Error(fmt.Sprintf("error while update customer. request: %h, error: %h", ctx.PostBody(), err.Error()))
-			h.responseWriter.WriteError(ctx, http.StatusText(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+			h.logger.Error(
+				fmt.Sprintf("error while update customer. request: %s, error: %s", ctx.PostBody(), err.Error()),
+			)
+			h.responseWriter.WriteError(
+				ctx,
+				http.StatusText(fasthttp.StatusInternalServerError),
+				fasthttp.StatusInternalServerError,
+			)
 			return
 		}
 	}
@@ -171,8 +189,12 @@ func (h *CustomerHandlerV1) Delete(ctx *fasthttp.RequestCtx) {
 	}
 	err := h.useCase.Delete(customerID.(string))
 	if err != nil {
-		h.logger.Error(fmt.Sprintf("error while delete customer. customerID: %h, error: %h", customerID, err.Error()))
-		h.responseWriter.WriteError(ctx, fasthttp.StatusMessage(fasthttp.StatusInternalServerError), fasthttp.StatusInternalServerError)
+		h.logger.Error(fmt.Sprintf("error while delete customer. customerID: %s, error: %s", customerID, err.Error()))
+		h.responseWriter.WriteError(
+			ctx,
+			fasthttp.StatusMessage(fasthttp.StatusInternalServerError),
+			fasthttp.StatusInternalServerError,
+		)
 		return
 	}
 	h.responseWriter.WriteSuccessDELETE(ctx)
