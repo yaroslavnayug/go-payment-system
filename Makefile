@@ -1,5 +1,5 @@
 OUTPUT?=bin/payment-system
-POSTGRESQL_URL=host='10.233.33.234' port=5432 user='pushwoosh' password='pushwoosh' dbname='pushwoosh'
+POSTGRESQL_URL?=host='0.0.0.0' port=5432 user='root' password='root' dbname='payment_system'
 LOG_LEVEL=debug
 
 .PHONY: vendor
