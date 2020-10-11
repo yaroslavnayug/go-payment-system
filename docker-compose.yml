@@ -11,6 +11,8 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
       POSTGRES_DB: payment_system
+    volumes:
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   app:
     build: .
