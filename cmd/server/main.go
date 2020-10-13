@@ -9,6 +9,8 @@ import (
 	"syscall"
 
 	"github.com/buaazp/fasthttprouter"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/log/zapadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/valyala/fasthttp"
 	"github.com/yaroslavnayug/go-payment-system/internal/config"
@@ -97,7 +99,17 @@ func MustLogger() *zap.Logger {
 }
 
 func MustPostgres(config config.Config, logger *zap.Logger) *pgxpool.Pool {
-	connection, err := pgxpool.Connect(context.Background(), config.PostgresConfig.HostString)
+	pgxCfg, _ := pgx.ParseConfig(config.PostgresConfig.HostString)
+	pgxCfg.Logger = zapadapter.NewLogger(logger)
+	pgxCfg.LogLevel = config.PostgresConfig.LogLevel
+	pgxCfg.PreferSimpleProtocol = true
+
+	pgxPoolCfg, _ := pgxpool.ParseConfig("")
+	pgxPoolCfg.ConnConfig = pgxCfg
+	pgxPoolCfg.MaxConns = config.PostgresConfig.MaxConnections
+	pgxPoolCfg.MinConns = config.PostgresConfig.MinConnections
+
+	connection, err := pgxpool.ConnectConfig(context.Background(), pgxPoolCfg)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("unable to connect to database: %s", err.Error()))
 	}

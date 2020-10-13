@@ -2,11 +2,14 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 )
+
+const tableName = "payment_system.customer"
 
 type CustomerRepository struct {
 	pgConn *pgxpool.Pool
@@ -17,14 +20,14 @@ func NewCustomerRepository(pgConn *pgxpool.Pool) *CustomerRepository {
 }
 
 func (a *CustomerRepository) Create(customer *domain.Customer) error {
-	query := `
+	query := fmt.Sprintf(`
 		INSERT INTO
-			payment_system.customer (
+			%s (
 				generatedid, firstname, lastname, email, phone, country, region, city, street, building,
 				passportnumber, passportissuedate, passportissuer, birthdate, birthplace
 		)
         VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`, tableName)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,
@@ -52,7 +55,7 @@ func (a *CustomerRepository) Create(customer *domain.Customer) error {
 }
 
 func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Customer, err error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT
 			uid,
 			generatedid,
@@ -71,9 +74,9 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 			birthdate,
 			birthplace
 		FROM
-			payment_system.customer
+			%s
 		WHERE
-			generatedid=$1;`
+			generatedid=$1;`, tableName)
 
 	customer = &domain.Customer{}
 	queryRow := a.pgConn.QueryRow(
@@ -109,7 +112,7 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 }
 
 func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (customer *domain.Customer, err error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT
 			uid,
 			generatedid,
@@ -128,9 +131,9 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 			birthdate,
 			birthplace
 		FROM
-			payment_system.customer
+			%s
 		WHERE
-			passportnumber=$1;`
+			passportnumber=$1;`, tableName)
 
 	customer = &domain.Customer{}
 	queryRow := a.pgConn.QueryRow(
@@ -164,14 +167,14 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 }
 
 func (a *CustomerRepository) Update(customer *domain.Customer) error {
-	query := `
+	query := fmt.Sprintf(`
 		UPDATE
-			payment_system.customer
+			%s
 		SET (
 				generatedid, firstname, lastname, email, phone, country, region, city, street, building,
 				passportnumber, passportissuedate, passportissuer, birthdate, birthplace
 		) = ROW
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`, tableName)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,
@@ -199,11 +202,11 @@ func (a *CustomerRepository) Update(customer *domain.Customer) error {
 }
 
 func (a *CustomerRepository) Delete(customerID string) error {
-	query := `
+	query := fmt.Sprintf(`
 		DELETE FROM
-			payment_system.customer
+			%s
 		WHERE 
-			generatedid = $1;`
+			generatedid = $1;`, tableName)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,
