@@ -55,10 +55,17 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestCreate_Find_Delete(t *testing.T) {
+func TestCreate_Find_Update_Delete(t *testing.T) {
 	t.Parallel()
 
-	// arrange
+	// clean
+	query := `DELETE FROM payment_system.customer WHERE generatedid = $1;`
+	_, err := PostgresConnection.Exec(context.Background(), query, "foobar123")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// arrange Create
 	issueDate, _ := time.Parse(domain.DateFormat, "01-01-2000")
 	birthDate, _ := time.Parse(domain.DateFormat, "01-01-2020")
 	customer := &domain.Customer{
@@ -83,13 +90,13 @@ func TestCreate_Find_Delete(t *testing.T) {
 		},
 	}
 
-	// act
-	err := Repository.Create(customer)
+	// act Create
+	err = Repository.Create(customer)
 	if err != nil {
 		t.Error(err)
 	}
 
-	// assert
+	// assert Create via FindByID
 	dbCustomer, err := Repository.FindByID(customer.GeneratedID)
 	if err != nil {
 		t.Error(err)
@@ -111,10 +118,67 @@ func TestCreate_Find_Delete(t *testing.T) {
 	assert.Equal(t, customer.Passport.IssueDate, dbCustomer.Passport.IssueDate)
 	assert.Equal(t, customer.Passport.Issuer, dbCustomer.Passport.Issuer)
 
-	// clean
-	query := `DELETE FROM payment_system.customer WHERE generatedid = $1;`
-	_, err = PostgresConnection.Exec(context.Background(), query, customer.GeneratedID)
+	// arrange Update
+	issueDate, _ = time.Parse(domain.DateFormat, "01-01-2020")
+	birthDate, _ = time.Parse(domain.DateFormat, "01-01-2021")
+	customer = &domain.Customer{
+		GeneratedID: "foobar123",
+		FirstName:   "Bruce_new",
+		LastName:    "Wayne_new",
+		Email:       "goo_new@gmail.com",
+		Phone:       "+7123_new",
+		Address: domain.Address{
+			Country:  "Russia_new",
+			Region:   "Msk_new",
+			City:     "Moscow_new",
+			Street:   "Marks_new",
+			Building: "105_new",
+		},
+		Passport: domain.Passport{
+			Number:     "1234567890",
+			IssueDate:  issueDate,
+			Issuer:     "Foo_new",
+			BirthDate:  birthDate,
+			BirthPlace: "Nsk_new",
+		},
+	}
+
+	// act Update
+	err = Repository.Update(customer)
 	if err != nil {
 		t.Error(err)
 	}
+
+	// assert Update via FindByPassportNumber
+	updatedCustomer, err := Repository.FindByPassportNumber(customer.Passport.Number)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, customer.FirstName, updatedCustomer.FirstName)
+	assert.Equal(t, customer.LastName, updatedCustomer.LastName)
+	assert.Equal(t, customer.Email, updatedCustomer.Email)
+	assert.Equal(t, customer.Phone, updatedCustomer.Phone)
+	assert.Equal(t, customer.Address.Country, updatedCustomer.Address.Country)
+	assert.Equal(t, customer.Address.Region, updatedCustomer.Address.Region)
+	assert.Equal(t, customer.Address.City, updatedCustomer.Address.City)
+	assert.Equal(t, customer.Address.Street, updatedCustomer.Address.Street)
+	assert.Equal(t, customer.Address.Building, updatedCustomer.Address.Building)
+	assert.Equal(t, customer.Passport.Number, updatedCustomer.Passport.Number)
+	assert.Equal(t, customer.Passport.BirthDate, updatedCustomer.Passport.BirthDate)
+	assert.Equal(t, customer.Passport.BirthPlace, updatedCustomer.Passport.BirthPlace)
+	assert.Equal(t, customer.Passport.IssueDate, updatedCustomer.Passport.IssueDate)
+	assert.Equal(t, customer.Passport.Issuer, updatedCustomer.Passport.Issuer)
+
+	// act Delete
+	err = Repository.Delete(updatedCustomer.GeneratedID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// assert Delete via FindByID
+	customer, err = Repository.FindByID(updatedCustomer.GeneratedID)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Nil(t, customer)
 }

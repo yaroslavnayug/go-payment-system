@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 )
@@ -98,7 +99,9 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 		&customer.Passport.BirthDate,
 		&customer.Passport.BirthPlace,
 	)
-
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +164,54 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 }
 
 func (a *CustomerRepository) Update(customer *domain.Customer) error {
+	query := `
+		UPDATE
+			payment_system.customer
+		SET (
+				generatedid, firstname, lastname, email, phone, country, region, city, street, building,
+				passportnumber, passportissuedate, passportissuer, birthdate, birthplace
+		) = ROW
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
+	_, err := a.pgConn.Exec(
+		context.Background(),
+		query,
+		customer.GeneratedID,
+		customer.FirstName,
+		customer.LastName,
+		customer.Email,
+		customer.Phone,
+		customer.Address.Country,
+		customer.Address.Region,
+		customer.Address.City,
+		customer.Address.Street,
+		customer.Address.Building,
+		customer.Passport.Number,
+		customer.Passport.IssueDate,
+		customer.Passport.Issuer,
+		customer.Passport.BirthDate,
+		customer.Passport.BirthPlace,
+	)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (a *CustomerRepository) Delete(customerID string) error {
+	query := `
+		DELETE FROM
+			payment_system.customer
+		WHERE 
+			generatedid = $1;`
+	_, err := a.pgConn.Exec(
+		context.Background(),
+		query,
+		customerID,
+	)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }
