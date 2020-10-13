@@ -1,10 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS payment_system;
 
-CREATE SEQUENCE IF NOT EXISTS payment_system.customer_uid_seq;
-
-CREATE TABLE IF NOT EXISTS payment_system.customer (
-    uid integer NOT NULL DEFAULT nextval('payment_system.customer_uid_seq'),
-    generatedid character varying(64) NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS customer (
+    uid character varying(64) NOT NULL UNIQUE,
     firstname character varying(64) NOT NULL,
     lastname character varying(64) NOT NULL,
     email character varying(64),
@@ -17,9 +14,10 @@ CREATE TABLE IF NOT EXISTS payment_system.customer (
     passportnumber character varying(10) NOT NULL UNIQUE,
 	passportissuedate date NOT NULL,
 	passportissuer character varying(255) NOT NULL,
-	birthdate date NOT NULL,
+	birthdate date NOT NULL default NOW(),
 	birthplace character varying(64) NOT NULL
 );
 
-ALTER SEQUENCE payment_system.customer_uid_seq
-OWNED BY payment_system.customer.uid;
+CREATE INDEX customer_uid_idx ON customer USING btree (uid);
+
+CREATE INDEX customer_passportnumber_idx ON customer USING btree (passportnumber);

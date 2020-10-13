@@ -59,7 +59,7 @@ func TestCreate_Find_Update_Delete(t *testing.T) {
 	t.Parallel()
 
 	// clean
-	query := `DELETE FROM payment_system.customer WHERE generatedid = $1;`
+	query := `DELETE FROM customer WHERE uid = $1;`
 	_, err := PostgresConnection.Exec(context.Background(), query, "foobar123")
 	if err != nil {
 		t.Error(err)
@@ -101,7 +101,6 @@ func TestCreate_Find_Update_Delete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	assert.Greater(t, dbCustomer.Uid, uint64(0))
 	assert.Equal(t, customer.GeneratedID, dbCustomer.GeneratedID)
 	assert.Equal(t, customer.FirstName, dbCustomer.FirstName)
 	assert.Equal(t, customer.LastName, dbCustomer.LastName)

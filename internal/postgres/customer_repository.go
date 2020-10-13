@@ -3,13 +3,34 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/yaroslavnayug/go-payment-system/internal/domain"
 )
 
-const tableName = "payment_system.customer"
+const tableName = "customer"
+
+var customerColumns = []string{
+	"uid",
+	"firstname",
+	"lastname",
+	"email",
+	"phone",
+	"country",
+	"region",
+	"city",
+	"street",
+	"building",
+	"passportnumber",
+	"passportissuedate",
+	"passportissuer",
+	"birthdate",
+	"birthplace",
+}
+
+var preparedCustomerColumns = strings.Join(customerColumns, ", ")
 
 type CustomerRepository struct {
 	pgConn *pgxpool.Pool
@@ -20,14 +41,12 @@ func NewCustomerRepository(pgConn *pgxpool.Pool) *CustomerRepository {
 }
 
 func (a *CustomerRepository) Create(customer *domain.Customer) error {
-	query := fmt.Sprintf(`
-		INSERT INTO
-			%s (
-				generatedid, firstname, lastname, email, phone, country, region, city, street, building,
-				passportnumber, passportissuedate, passportissuer, birthdate, birthplace
-		)
-        VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`, tableName)
+	query := fmt.Sprintf(
+		`INSERT INTO %s (%s) VALUES (%s);`,
+		tableName,
+		preparedCustomerColumns,
+		getSubstitutionVerbsForColumns(customerColumns),
+	)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,
@@ -55,28 +74,11 @@ func (a *CustomerRepository) Create(customer *domain.Customer) error {
 }
 
 func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Customer, err error) {
-	query := fmt.Sprintf(`
-		SELECT
-			uid,
-			generatedid,
-			firstname,
-			lastname,
-			email,
-			phone,
-			country,
-			region,
-			city,
-			street,
-			building,
-			passportnumber,
-			passportissuer,
-			passportissuedate,
-			birthdate,
-			birthplace
-		FROM
-			%s
-		WHERE
-			generatedid=$1;`, tableName)
+	query := fmt.Sprintf(
+		`SELECT %s FROM %s WHERE uid=$1;`,
+		preparedCustomerColumns,
+		tableName,
+	)
 
 	customer = &domain.Customer{}
 	queryRow := a.pgConn.QueryRow(
@@ -85,7 +87,6 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 		customerID,
 	)
 	err = queryRow.Scan(
-		&customer.Uid,
 		&customer.GeneratedID,
 		&customer.FirstName,
 		&customer.LastName,
@@ -97,8 +98,8 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 		&customer.Address.Street,
 		&customer.Address.Building,
 		&customer.Passport.Number,
-		&customer.Passport.Issuer,
 		&customer.Passport.IssueDate,
+		&customer.Passport.Issuer,
 		&customer.Passport.BirthDate,
 		&customer.Passport.BirthPlace,
 	)
@@ -112,28 +113,11 @@ func (a *CustomerRepository) FindByID(customerID string) (customer *domain.Custo
 }
 
 func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (customer *domain.Customer, err error) {
-	query := fmt.Sprintf(`
-		SELECT
-			uid,
-			generatedid,
-			firstname,
-			lastname,
-			email,
-			phone,
-			country,
-			region,
-			city,
-			street,
-			building,
-			passportnumber,
-			passportissuer,
-			passportissuedate,
-			birthdate,
-			birthplace
-		FROM
-			%s
-		WHERE
-			passportnumber=$1;`, tableName)
+	query := fmt.Sprintf(
+		`SELECT %s FROM %s WHERE	passportnumber=$1;`,
+		preparedCustomerColumns,
+		tableName,
+	)
 
 	customer = &domain.Customer{}
 	queryRow := a.pgConn.QueryRow(
@@ -142,7 +126,6 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 		passportNumber,
 	)
 	err = queryRow.Scan(
-		&customer.Uid,
 		&customer.GeneratedID,
 		&customer.FirstName,
 		&customer.LastName,
@@ -154,8 +137,8 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 		&customer.Address.Street,
 		&customer.Address.Building,
 		&customer.Passport.Number,
-		&customer.Passport.Issuer,
 		&customer.Passport.IssueDate,
+		&customer.Passport.Issuer,
 		&customer.Passport.BirthDate,
 		&customer.Passport.BirthPlace,
 	)
@@ -167,14 +150,13 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 }
 
 func (a *CustomerRepository) Update(customer *domain.Customer) error {
-	query := fmt.Sprintf(`
-		UPDATE
-			%s
-		SET (
-				generatedid, firstname, lastname, email, phone, country, region, city, street, building,
-				passportnumber, passportissuedate, passportissuer, birthdate, birthplace
-		) = ROW
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`, tableName)
+	query := fmt.Sprintf(
+		`UPDATE %s SET (%s) = ROW (%s) WHERE uid='%s';`,
+		tableName,
+		preparedCustomerColumns,
+		getSubstitutionVerbsForColumns(customerColumns),
+		customer.GeneratedID,
+	)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,
@@ -202,11 +184,10 @@ func (a *CustomerRepository) Update(customer *domain.Customer) error {
 }
 
 func (a *CustomerRepository) Delete(customerID string) error {
-	query := fmt.Sprintf(`
-		DELETE FROM
-			%s
-		WHERE 
-			generatedid = $1;`, tableName)
+	query := fmt.Sprintf(
+		`DELETE FROM	%s WHERE uid = $1;`,
+		tableName,
+	)
 	_, err := a.pgConn.Exec(
 		context.Background(),
 		query,

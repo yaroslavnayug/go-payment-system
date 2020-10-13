@@ -8,10 +8,6 @@ vendor:
 	GO111MODULE=${GO111MODULE} go mod tidy && \
 	GO111MODULE=${GO111MODULE} go mod vendor
 
-.PHONY: migration
-migration:
-	POSTGRESQL_URL="${POSTGRESQL_URL}" go run cmd/migration/main.go
-
 .PHONY: u-test
 u-test:
 	GO111MODULE=on go test -v -mod=vendor -cover ./... -coverprofile cover.out;

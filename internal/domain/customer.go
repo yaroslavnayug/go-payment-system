@@ -13,7 +13,6 @@ type CustomerRepository interface {
 }
 
 type Customer struct {
-	Uid         uint64
 	GeneratedID string
 	FirstName   string
 	LastName    string
