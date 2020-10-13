@@ -320,3 +320,7 @@ func TestFind_CustomerNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, response.Header.StatusCode())
 	assert.Equal(t, `{"error":{"status":404,"message":"Not Found"}}`, string(response.Body()))
 }
+
+func TestUpdateNotFound(t *testing.T) {
+
+}

@@ -81,7 +81,7 @@ func (h *CustomerHandlerV1) Create(ctx *fasthttp.RequestCtx) {
 
 	err = h.useCase.Create(customer)
 	if err != nil {
-		if err, isValidationError := err.(*domain.ValidationError); isValidationError {
+		if _, isValidationError := err.(*domain.ValidationError); isValidationError {
 			h.responseWriter.WriteError(ctx, err.Error(), fasthttp.StatusConflict)
 			return
 		} else {

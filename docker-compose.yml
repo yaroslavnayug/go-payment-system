@@ -15,6 +15,7 @@ services:
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   app:
+    restart: always
     build: .
     ports:
       - "8080:8080"

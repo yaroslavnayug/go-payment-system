@@ -143,6 +143,10 @@ func (a *CustomerRepository) FindByPassportNumber(passportNumber string) (custom
 		&customer.Passport.BirthPlace,
 	)
 
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
